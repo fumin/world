@@ -1,6 +1,7 @@
 require 'active_record'
 
 def setup_db_conn
+puts "!!!!!!!!! #{ENV['DATABASE_URL']}, #{URI.parse(ENV['DATABASE_URL'])}"
   ActiveRecord::Base.establish_connection(
     ENV['DATABASE_URL'] ?
       URI.parse(ENV['DATABASE_URL']) :
