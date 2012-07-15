@@ -1,0 +1,7 @@
+development:
+  adapter: postgresql
+  encoding: unicode
+  database: iphone_route
+  pool: 5
+  username: mac
+  password: 0000
