@@ -52,7 +52,13 @@ get %r{/(\w+)(/.*)?} do
                 buf = client.recv()
                 more_parts = false if buf.size == 1
 puts "[DEBUG] we've recved, more_parts = #{more_parts}, buf[0].size = #{buf[0].size} #{Time.now}"
-                y << Zlib.inflate(buf[0])
+                inflate_buf = begin
+                                Zlib.inflate(buf[0])
+                              rescue
+puts "!!!!!!!!!!!!! ZLIB RESCUED!!!"
+                                buf[0]
+                              end
+                y << inflate_buf
               end
               client.close
             end]
