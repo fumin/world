@@ -1,7 +1,9 @@
 require 'sinatra'
-require './setup'
 require './lib/mdcliapi2'
 require 'zlib'
+
+require './setup'
+require './client'
 
 init_app
 
@@ -24,42 +26,25 @@ end
 get %r{/(\w+)(/.*)?} do
   user_id = params[:captures][0]
   path = params[:captures].size == 2 ? params[:captures][1] : ""
-  r = Route.find_by_user_name(user_id)
-  return "The apple device #{user_id} you requested is not registered" unless r
-  service = r.current_service_hash
-  client = MajorDomoClient.new('tcp://geneva3.godfat.org:5555')
-  client.send('mmi.service', service)
-  reply = client.recv
-  puts "Lookup #{service} service: #{reply}"
-  unless reply == ["200"]
-      client.close
-      return "The apple device #{user_id} you requested is not online"
-  end
-  request = path
 
-  # if query for an image
-  m = %r{^/images/(?<img_index>\d+)(?:\.[[:alpha:]]+)?$}.match(request)
-  if m
-    client.send(service, request)
-    buf = client.recv() # ["200", "Content-Type", "image/jpeg", ..., "more"]
-    return [buf[0].to_i,
-            {"Content-Type" => "image/jpeg",
-             "Content-Dispositio" => "inline; filename=#{m['img_index']}.jpg",
-             "Last-Modified" => Time.now.ctime.to_s}.merge(Hash[*buf[1..-2]]),
-            Enumerator.new do |y|
-              more_parts = true
-              while more_parts
-                buf = client.recv()
-                more_parts = false if buf.size == 1
-puts "[DEBUG] we've recved, more_parts = #{more_parts}, buf[0].size = #{buf[0].size} #{Time.now}"
-                inflate_buf = begin
-                                Zlib.inflate(buf[0])
-                              rescue
-                                buf[0]
-                              end
-                y << inflate_buf
-              end
-              client.close
-            end]
+  client = Client.new path
+  return client.err_msg unless client.is_service_online?(user_id)
+
+  case path
+  when %r{^/photo_album/?$}
+    number_of_photos = client.query("/number_of_images")[2].to_i
+    all_img_links = (0...number_of_photos).to_a.reverse.map do |i|
+                      %!<a href="/#{user_id}/images/#{i}"><img src="/#{user_id}/thumbnails/#{i}"></a>!
+                    end
+    @img_links = all_img_links[0...25] # TODO: use wookmark!!
+    erb :photo_album
+  when %r{^/number_of_images/?$}
+    client.built_in_query
+  when %r{^/images/(?<img_index>\d+)(?:\.[[:alpha:]]+)?$}
+    client.process_image_query "#{$1}_img.jpg"
+  when %r{^/thumbnails/(?<img_index>\d+)(?:\.[[:alpha:]]+)?$}
+    client.process_image_query "#{$1}_thumbnail.jpg"
+  else
+    [404, {}, ""]
   end
 end # get '/:user_id/*.*'
