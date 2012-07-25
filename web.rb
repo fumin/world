@@ -24,25 +24,29 @@ get '/route_login' do
 end
 
 get %r{/(\w+)(/.*)?} do
-  user_id = params[:captures][0]
+  @user_id = params[:captures][0]
   path = params[:captures].size == 2 ? params[:captures][1] : ""
 
-  client = Client.new path
-  return client.err_msg unless client.is_service_online?(user_id)
+  client = Client.new @user_id, path
+  return client.err_msg unless client.is_service_online?
 
+  @batch_size = 25
   case path
   when %r{^/photo_album/?$}
-    number_of_photos = client.query("/number_of_images")[2].to_i
-    all_img_links = (0...number_of_photos).to_a.reverse.map do |i|
-                      %!<a href="/#{user_id}/images/#{i}"><img src="/#{user_id}/thumbnails/#{i}"></a>!
-                    end
-    @img_links = all_img_links[0...25] # TODO: use wookmark!!
+    @number_of_photos, @img_links = client.all_image_links(@batch_size, 0)
     erb :photo_album
+  when %r{^/wookmark/?$}
+    limit = params[:limit] || @batch_size; offset = params[:offset] || 0
+    JSON.generate client.all_image_links(limit, offset)[1]
   when %r{^/number_of_images/?$}
     client.built_in_query
   when %r{^/images/(?<img_index>\d+)(?:\.[[:alpha:]]+)?$}
+    return "image #{$1} doesn't exist" if client.all_image_links(@batch_size, 0)[0] <= $1.to_i
+    client.is_service_online? # reconnect again because built_in_query closes socket
     client.process_image_query "#{$1}_img.jpg"
   when %r{^/thumbnails/(?<img_index>\d+)(?:\.[[:alpha:]]+)?$}
+    return "image #{$1} doesn't exist" if client.all_image_links(@batch_size, 0)[0] <= $1.to_i
+    client.is_service_online?
     client.process_image_query "#{$1}_thumbnail.jpg"
   else
     [404, {}, ""]

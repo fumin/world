@@ -1,5 +1,69 @@
-<ul id="tiles">
-<% @img_links.each do |img_link| %>
-  <li><%= img_link %></li>
-<% end %>
-</ul>
+<head>
+  <title>photo album of <%= @user_id%>'s iPhone</title>
+  <!-- CSS Reset -->
+  <link rel="stylesheet" href="/css/reset.css">
+
+  <!-- Styling for your grid blocks -->
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+
+<body>
+  <div id="main" role="main">
+  <ul id="tiles">
+  <% @img_links.each do |img_link| %>
+    <li><%= img_link %></li>
+  <% end %>
+  </ul>
+  </div>
+
+  <script src="/js/jquery.js"></script>
+  <script src="/js/jquery.wookmark.js"></script>
+  <!-- Once the page is loaded, initalize the plug-in. -->
+  <script type="text/javascript">
+    var handler = null;
+
+    var offset = <%= @batch_size %>; // initial number of displayed photos, will increase later on
+    var last_scroll_time = 0;
+
+    // Prepare layout options.
+    var options = {
+      autoResize: true, // This will auto-update the layout when the browser window is resized.
+      container: $('#main'), // Optional, used for some extra CSS styling
+      offset: 2, // Optional, the distance between grid items
+      // itemWidth: 85 // Optional, the width of a grid item
+    };
+
+    /**
+     * When scrolled all the way to the bottom, add more tiles.
+     */
+    function onScroll(event) {
+      if (Date.now() - last_scroll_time < 2000) return; // 2 secs
+      last_scroll_time = Date.now();
+      // Check if we're within 100 pixels of the bottom edge of the broser window.
+      var closeToBottom = ($(window).scrollTop() + $(window).height() > $(document).height() - 1);
+      if(closeToBottom && offset < <%= @number_of_photos %>) {
+        $.ajax({url: <%= %!'/#{@user_id}/wookmark'! %>, data: {limit: <%= @batch_size %>, offset: offset},
+                dataType: 'json'}).
+          done(function(links){
+                 $('#tiles').append('<li>'+links.join('</li><li>')+'</li>');
+                 offset += <%= @batch_size %>;
+                 // we need to do this img.load trick because iphone loads them extremely slowly
+                 $('#tiles > li > a > img').load(function() {
+                   // Clear our previous layout handler.
+                   if(handler) handler.wookmarkClear();
+                   // Create a new layout handler.
+                   handler = $('#tiles li');
+                   handler.wookmark(options); });
+               });}};
+
+    $(document).ready(new function() {
+      // Capture scroll event.
+      $(document).bind('scroll', onScroll);
+
+      // Call the layout function.
+      $('#tiles > li > a > img').load(function() {
+                                        handler = $('#tiles li');
+                                        handler.wookmark(options); });
+    });
+  </script>
+</body>

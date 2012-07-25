@@ -1,15 +1,16 @@
 class Client
   attr_accessor :err_msg, :service, :path
-  def initialize path
+  def initialize user_id, path
     @err_msg = ""
     @client = nil
     @service = ""
     @path = path
+    @user_id = user_id
   end
-  def is_service_online? user_id
-    r = Route.find_by_user_name(user_id)
+  def is_service_online?
+    r = Route.find_by_user_name(@user_id)
     unless r
-      @err_msg = "The apple device #{user_id} you requested is not registered"
+      @err_msg = "The apple device #{@user_id} you requested is not registered"
       return false
     end
     @service = r.current_service_hash
@@ -18,7 +19,7 @@ class Client
     reply = @client.recv
     unless reply == ["200"]
       @client.close
-      @err_msg = "The apple device #{user_id} you requested is not online"
+      @err_msg = "The apple device #{@user_id} you requested is not online"
       return false
     end
     true
@@ -57,5 +58,13 @@ puts "[DEBUG] we've recved, more_parts = #{more_parts}, buf[0].size = #{buf[0].s
        end
        @client.close
      end]
+  end
+  def all_image_links limit, offset
+    limit = limit.to_i; offset = offset.to_i
+    number_of_photos = query("/number_of_images")[2].to_i
+    all_img_links = (0...number_of_photos).to_a.reverse.map do |i|
+                      %!<a href="/#{@user_id}/images/#{i}"><img src="/#{@user_id}/thumbnails/#{i}"></a>!
+                    end
+    [number_of_photos, all_img_links[offset...(offset+limit)]]
   end
 end # module General
