@@ -1,3 +1,5 @@
+require 'sinatra'
+
 class Client
   attr_accessor :err_msg, :service, :path
   def initialize user_id, path
