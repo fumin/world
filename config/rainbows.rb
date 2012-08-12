@@ -1,5 +1,5 @@
 Rainbows! do
-  use :ThreadSpawn
+  use :ThreadPool
 end
 
 # unicorn configurations
