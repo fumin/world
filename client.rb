@@ -1,5 +1,12 @@
 require 'sinatra'
 
+class SinatraStream < Enumerator
+  attr_accessor :stream_callback
+  def close
+    stream_callback.call
+  end
+end
+
 class Client
   attr_accessor :err_msg, :service, :path
   def initialize user_id, path
@@ -37,29 +44,35 @@ class Client
     status, headers, body = built_in_query({}, path)
     complete_body = ""
     body.each{|b| complete_body.concat(b)}
+    body.close
     [status, headers, complete_body]
   end
 
   def built_in_query headers={}, request_path=@path
     @client.send(@service, request_path)
     buf = @client.recv() # ["200", "Content-Type", "image/jpeg", ..., "more"]
-    more_parts = true
+    stream = SinatraStream.new do |y|
+               more_parts = true
+               while more_parts
+                 buf = @client.recv()
+                 more_parts = false if buf.size == 1
+puts "[DEBUG] we've recved, more_parts = #{more_parts}, buf[0].size = #{buf[0].size} #{Time.now}"
+                 inflated_buf = begin
+                                 Zlib.inflate(buf[0])
+                               rescue
+                                 buf[0]
+                               end
+                 y << inflated_buf
+               end
+             end
+    stream.callback = Proc.new do
+puts "[DEBUG] @client.closed!"
+                        @client.close
+                      end
+
     [buf[0].to_i,
      headers.merge(Hash[*buf[1..-2]]),
-     stream do |out|
-       out.errback {@client.close}
-       while more_parts
-         buffer = @client.recv()
-         more_parts = false if buffer.size == 1
-puts "[DEBUG] we've recved, more_parts = #{more_parts}, buf[0].size = #{buf[0].size} #{Time.now}"
-         inflated_buf = begin
-                          Zlib.inflate(buffer[0])
-                        rescue
-                          buffer[0]
-                        end
-         out << inflated_buf
-       end
-     end]
+     stream]
   end
 
   def all_image_links limit, offset
