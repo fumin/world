@@ -65,10 +65,10 @@ puts "[DEBUG] we've recved, more_parts = #{more_parts}, buf[0].size = #{buf[0].s
                  y << inflated_buf
                end
              end
-    stream.callback = Proc.new do
+    stream.stream_callback = Proc.new do
 puts "[DEBUG] @client.closed!"
-                        @client.close
-                      end
+                               @client.close
+                             end
 
     [buf[0].to_i,
      headers.merge(Hash[*buf[1..-2]]),
