@@ -41,24 +41,25 @@ class Client
   def built_in_query headers={}, request_path=@path
     @client.send(@service, request_path)
     buf = @client.recv() # ["200", "Content-Type", "image/jpeg", ..., "more"]
+    more_parts = true
     [buf[0].to_i,
      headers.merge(Hash[*buf[1..-2]]),
-     Enumerator.new do |y|
-       more_parts = true
+     stream do |out|
+       out.errback {@client.close}
        while more_parts
-	 buf = @client.recv()
-	 more_parts = false if buf.size == 1
+         buffer = @client.recv()
+         more_parts = false if buffer.size == 1
 puts "[DEBUG] we've recved, more_parts = #{more_parts}, buf[0].size = #{buf[0].size} #{Time.now}"
-	 inflated_buf = begin
-			 Zlib.inflate(buf[0])
-		       rescue
-			 buf[0]
-		       end
-	 y << inflated_buf
+         inflated_buf = begin
+                          Zlib.inflate(buffer[0])
+                        rescue
+                          buffer[0]
+                        end
+         out << inflated_buf
        end
-       @client.close
      end]
   end
+
   def all_image_links limit, offset
     limit = limit.to_i; offset = offset.to_i
     number_of_photos = query("/number_of_images")[2].to_i

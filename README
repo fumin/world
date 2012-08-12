@@ -1,6 +1,3 @@
-TODO:
-use wookmark!!
-
 # Making iPhone a server
 1. To start the server
     unicorn -p 9292 -c config/unicorn.rb
