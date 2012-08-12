@@ -4,12 +4,12 @@ def setup_db_conn
   if ENV['DATABASE_URL']
     db_env = URI.parse(ENV['DATABASE_URL'])
     db = {}
-    db['adapter'] = (db.scheme == 'postgres' ? 'postgresql' : db.scheme)
-    db['host'] = db.host
-    db['port'] = db.port
-    db['username'] = db.user
-    db['password'] = db.password
-    db['database'] = db.path[1..-1]
+    db['adapter'] = (db_env.scheme == 'postgres' ? 'postgresql' : db_env.scheme)
+    db['host'] = db_env.host
+    db['port'] = db_env.port
+    db['username'] = db_env.user
+    db['password'] = db_env.password
+    db['database'] = db_env.path[1..-1]
     db['pool'] = 1000
     db['encoding'] = 'utf8'
   else
