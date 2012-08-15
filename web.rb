@@ -19,7 +19,7 @@ get '/route_login' do
     r.save
     current_service_hash
   else
-    nil
+    "wrong username or password"
   end
 end
 
