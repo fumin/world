@@ -15,6 +15,14 @@ namespace :db do
     ActiveRecord::Base.connection.create_database(cfg['database'])
   end
 
+  desc "Drop database"
+  task(:drop) do
+    cfg = YAML::load(File.open('config/database.yml'))['development']
+    ActiveRecord::Base.establish_connection(
+      cfg.merge('database' => 'postgres'))
+    ActiveRecord::Base.connection.drop_database(cfg['database'])
+  end
+
   desc "Migrate the database"
   task(migrate: :environment) do
     ActiveRecord::Base.logger = Logger.new(STDOUT)

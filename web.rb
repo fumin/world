@@ -12,7 +12,7 @@ get '/' do
 end
 
 get '/route_login' do
-  r = Route.find_by_user_name(params[:user_name])
+  r = Route.find_by_username(params[:username])
   if r && r.password == params[:password]
     current_service_hash = SecureRandom.uuid
     r.current_service_hash = current_service_hash
@@ -32,6 +32,8 @@ get %r{/(\w+)(/.*)?} do
 
   @batch_size = 25
   case path
+  when %r{^/?}
+    redirect to("/#{@user_id}/photo_album")
   when %r{^/photo_album/?$}
     @number_of_photos, @img_links = client.all_image_links(@batch_size, 0)
     erb :photo_album

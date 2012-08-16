@@ -17,7 +17,7 @@ class Client
     @user_id = user_id
   end
   def is_service_online?
-    r = Route.find_by_user_name(@user_id)
+    r = Route.find_by_username(@user_id)
     unless r
       @err_msg = "The apple device #{@user_id} you requested is not registered"
       return false
