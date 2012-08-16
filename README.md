@@ -1,9 +1,7 @@
 # iServe - web server part
 ## Common commands
-1. To start the server
-        zbatery -p 9292 -c config/rainbows.rb
-2. To enter console
-        irb -r ./web.rb
+1. To start the server `zbatery -p 9292 -c config/rainbows.rb`
+2. To enter console `irb -r ./web.rb`
 
 ## How to build zeromq C binaries in heroku
 1. Enter our heroku dyno by running `heroku run bash --remote heroku`
