@@ -28,6 +28,7 @@ class MajorDomoClient
   def close
     @poller.deregister @client, ZMQ::DEALER
     @client.close
+    ZMQ::Context.close(@context.context).call
   end
 
   def send service, request

@@ -83,4 +83,8 @@ puts "[DEBUG] @client.closed!"
                     end
     [number_of_photos, all_img_links[offset...(offset+limit)]]
   end
+
+  def close
+    @client.close
+  end
 end # module General

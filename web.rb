@@ -26,13 +26,15 @@ end
 get %r{/(\w+)(/.*)?} do
   @user_id = params[:captures][0]
   path = params[:captures].size == 2 ? params[:captures][1] : ""
+  path ||= ""
 
   client = Client.new @user_id, path
   return client.err_msg unless client.is_service_online?
 
   @batch_size = 25
   case path
-  when %r{^/?}
+  when %r{^/?$}
+    client.close
     redirect to("/#{@user_id}/photo_album")
   when %r{^/photo_album/?$}
     @number_of_photos, @img_links = client.all_image_links(@batch_size, 0)
