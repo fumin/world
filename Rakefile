@@ -9,7 +9,7 @@ namespace :db do
 
   desc "Create database"
   task(:create) do
-    cfg = YAML::load(File.open('config/database.yml'))['development']
+    cfg = db_hash
     ActiveRecord::Base.establish_connection(
       cfg.merge('database' => 'postgres'))
     ActiveRecord::Base.connection.create_database(cfg['database'])
@@ -17,7 +17,7 @@ namespace :db do
 
   desc "Drop database"
   task(:drop) do
-    cfg = YAML::load(File.open('config/database.yml'))['development']
+    cfg = db_hash
     ActiveRecord::Base.establish_connection(
       cfg.merge('database' => 'postgres'))
     ActiveRecord::Base.connection.drop_database(cfg['database'])

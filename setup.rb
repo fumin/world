@@ -1,6 +1,6 @@
 require 'active_record'
 
-def setup_db_conn
+def db_hash
   if ENV['DATABASE_URL']
     db_env = URI.parse(ENV['DATABASE_URL'])
     db = {}
@@ -15,7 +15,11 @@ def setup_db_conn
   else
     db = YAML::load(File.open('config/database.yml'))['development']
   end
-  ActiveRecord::Base.establish_connection(db)
+  db
+end
+
+def setup_db_conn
+  ActiveRecord::Base.establish_connection(db_hash)
 end
 
 def init_app
