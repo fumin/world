@@ -8,7 +8,15 @@ require './client'
 init_app
 
 get '/' do
-  "Hello, world"
+  erb :index
+end
+
+post '/signup' do
+  route = params[:route]
+  return 400 unless route['username'] && route['password'] &&
+                    route['password'].size > 6 && route['password'].size < 20
+  Route.create(route)
+  redirect to('/')
 end
 
 get '/route_login' do
