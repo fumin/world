@@ -19,7 +19,8 @@ class Client
   def is_service_online?
     r = Route.find_by_username(@user_id)
     unless r
-      @err_msg = "The apple device #{@user_id} you requested is not registered"
+      @err_msg = 
+        "The apple device '#{@user_id}' you requested is not registered"
       return false
     end
     @service = r.current_service_hash
@@ -28,7 +29,7 @@ class Client
     reply = @client.recv
     unless reply == ["200"]
       @client.close
-      @err_msg = "The apple device #{@user_id} you requested is not online"
+      @err_msg = "The apple device '#{@user_id}' you requested is not online"
       return false
     end
     true

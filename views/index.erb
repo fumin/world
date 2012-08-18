@@ -8,46 +8,119 @@
   </head>
   <body>
     <div class="container">
-      <div class="span8 offset2">
-        <form action="/signup" method="post" class="well form-horizontal">
-          <input type="text" placeholder="name" name="route[username]">
-          <input type="password" placeholder="password" name="route[password]">
-          <button type="submit" class="btn signup-btn">Sign up for iServe</button>
-        </form>
+      <div class="row">
+        <div class="span3">
+          <h1>iServe</h1>
+          <div class="row"> 
+            <div class="span1">
+              <img src="/img/web-icon.png" >
+            </div>
+            <div class="span2">
+              <img src="/img/app_store_badge.png" >
+            </div>
+          </div><br/>
+          <div id="congrats" class="alert alert-success" style="display: none"></div>
+          <form action="/signup" method="post" class="well form-inline" id="signup_form">
+            <div class="control-group">
+              <div class="controls">
+                <input id="username_input" type="text" placeholder="name" name="route[username]">
+              </div>
+            </div>
+            <div class="control-group">
+              <div class="controls">
+                <input id="password_input" type="password" placeholder="password" name="route[password]">
+              </div>
+            </div>
+            <button id="signup_button" type="submit" class="btn signup-btn">Sign up for iServe</button>
+            <div id="ajax_msg" class="control-group error" style="display: none">
+              <label class="control-label"></label>
+            </div>
+          </form>
+        </div>
 
-        <div id="myCarousel" class="carousel slide">
-          <!-- Carousel items -->
-          <div class="carousel-inner">
-            <div class="active item">
-              <img src="/img/iphone_taking_photo.jpg" alt="">
-              <h4>iServe</h4>
-              <p>Access everything in your iPhone effortlessly</p>
+        <div class="span9">
+          <div id="myCarousel" class="carousel slide">
+            <!-- Carousel items -->
+            <div class="carousel-inner">
+              <div class="active item">
+                <img src="/img/iphone_taking_photo.jpg" alt="">
+                <h4>iServe</h4>
+                <p>Access everything in your iPhone effortlessly</p>
+              </div>
+              <div class="item">
+                <img src="/img/taking-the-daisy-train.jpg" alt="">
+                <h4>No matter how far we are</h4>
+                <p>away from home commmuting, riding, or traveling</p>
+              </div>
+              <div class="item">
+                <img src="/img/people_on_computer.jpg" alt="">
+                <h4>Our family and friends</h4>
+                <p>will still be able to browse photos contained in our devices
+                   the very way we browse the web</p>
+              </div>
             </div>
-            <div class="item">
-              <img src="/img/taking-the-daisy-train.jpg" alt="">
-              <h4>No matter how far we are</h4>
-              <p>away from home commmuting, riding, or traveling</p>
-            </div>
-            <div class="item">
-              <img src="/img/people_on_computer.jpg" alt="">
-              <h4>Our family and friends</h4>
-              <p>will still be able to browse photos contained in our devices
-                 the very way we browse the web</p>
-            </div>
+            <!-- Carousel nav -->
+            <a class="carousel-control left" href="#myCarousel" data-slide="prev">&lsaquo;</a>
+            <a class="carousel-control right" href="#myCarousel" data-slide="next">&rsaquo;</a>
           </div>
-          <!-- Carousel nav -->
-          <a class="carousel-control left" href="#myCarousel" data-slide="prev">&lsaquo;</a>
-          <a class="carousel-control right" href="#myCarousel" data-slide="next">&rsaquo;</a>
         </div>
       </div>
     </div>
 
     <script type="text/javascript" src="/js/jquery.js"></script>
+    <script type="text/javascript" src="/js/jquery.form.js"></script>
+    <script type="text/javascript" src="/js/jquery.validate.js"></script>
     <script type="text/javascript" src="/js/bootstrap.js"></script>
     <script type="text/javascript">
       $(function(){
-        $('.carousel').carousel();
-      });
+        $("#signup_button").click(function(){
+          $("#signup_form span.help-inline").remove();
+          $("#signup_form").children(".control-group").not("#ajax_msg").removeClass("error");
+          $("#ajax_msg").html("");
+        });
+        $(".carousel").carousel();
+        jQuery.validator.addMethod("are_password_characters_valid",
+          function(value, element){
+            return /^[a-zA-Z0-9]+$/.test(value);
+          }, "password can only contain letters or numbers");
+        jQuery.validator.addMethod("is_valid_password_len",
+          function(value, element){
+            return /^.{6,20}$/.test(value);
+          }, "password length must be between 6 to 20");
+        jQuery.validator.addMethod("is_valid_username_len",
+          function(value, element){
+            return /^.+$/.test($("#username_input").val());
+          }, "a name is required");
+        jQuery.validator.addMethod("are_username_characters_valid",
+          function(value, element){
+            return /^[a-zA-Z0-9]+$/.test(value);
+          }, "a valid name can only contain letters or numbers");
+        $("#signup_form").validate({
+          onkeyup: false, onfocusout: false, onclick: false,
+          rules: {"route[username]": {is_valid_username_len: true,
+                                      are_username_characters_valid: true},
+                  "route[password]": {is_valid_password_len: true,
+                                      are_password_characters_valid: true}},
+          errorPlacement: function(error, element) {
+            element.parent().children("span.help-inline").remove();
+            $("<span/>").addClass("help-inline").html(error).insertAfter(element);
+            element.val("").focus().parent().parent().addClass("error");},
+          submitHandler: function(form){
+            var ajax_success_msg = function(data){return 'First, start iServe on your device.<br/> Next, visit<br/><a href="/' + data + '">http://iphone.nandalu.idv.tw/'+ data + '</a></br>to browse photos on your device simply through your browser effortlessly.';};
+            var ajax_error_msg = "Sorry, a server error has occured, please try again, thanks.";
+            $(form).ajaxSubmit({
+              type: "POST",
+              success: function(data, textStatus, jqXHR){
+                         $("<h4/>").addClass("alert-heading").html("Congratulations,<br/> account successfully created!").appendTo($("#congrats"))
+                         $("<br/>").appendTo($("#congrats"))
+                         $("#congrats").append(ajax_success_msg(data));
+                         $("#signup_form").hide();
+                         $("#congrats").show();},
+              error: function(jqXHR, textStatus, errorThrown){
+                       $("#ajax_msg").show().children("label").html(ajax_error_msg);}
+            });} // submitHandler
+        }); // $("#signup_form").validate
+      }); // $(function(){
     </script>
   </body>
 </html>
