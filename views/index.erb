@@ -81,8 +81,8 @@
         $(".carousel").carousel();
         jQuery.validator.addMethod("are_password_characters_valid",
           function(value, element){
-            return /^[a-zA-Z0-9]+$/.test(value);
-          }, "password can only contain letters or numbers");
+            return /^[-a-zA-Z0-9_.!@#$%\^&*,()]+$/.test(value);
+          }, "password can only contain letters, numbers, or punctuations");
         jQuery.validator.addMethod("is_valid_password_len",
           function(value, element){
             return /^.{6,20}$/.test(value);
@@ -93,8 +93,8 @@
           }, "a name is required");
         jQuery.validator.addMethod("are_username_characters_valid",
           function(value, element){
-            return /^[a-zA-Z0-9]+$/.test(value);
-          }, "a valid name can only contain letters or numbers");
+            return /^[-a-zA-Z0-9_.]+$/.test(value);
+          }, "a valid name can only contain letters, numbers, or '.', '-', '_'");
         $("#signup_form").validate({
           onkeyup: false, onfocusout: false, onclick: false,
           rules: {"route[username]": {is_valid_username_len: true,
