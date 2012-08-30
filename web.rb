@@ -11,6 +11,10 @@ get '/' do
   erb :index
 end
 
+get '/support' do
+  erb :support
+end
+
 post '/signup' do
   route = params[:route]
   return 400 unless route['username'] && route['password'] &&
